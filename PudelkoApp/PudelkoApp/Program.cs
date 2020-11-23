@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using PudelkoLib;
 using static PudelkoLib.Pudelko;
 
@@ -8,16 +9,33 @@ namespace PudelkoApp
     {
         static void Main(string[] args)
         {
-            Pudelko P = new Pudelko(1, 2.1, 3.05, UnitOfMeasure.milimeter);
-            Pudelko P2 = new Pudelko(1, 3.05, 2.1);
-            Pudelko P3 = new Pudelko(2.1, 1, 3.05);
-            Console.WriteLine(P.Equals(P2));
 
-            Console.WriteLine(P.ToString("mm",null));
+            List<Pudelko> pudelka = new List<Pudelko>();
 
-            Pudelko P4 = new Pudelko(2100, 10000, 3050, UnitOfMeasure.milimeter);
+            pudelka.Add(new Pudelko(1, 2.1, 3.05, UnitOfMeasure.milimeter));
+            pudelka.Add(new Pudelko(1, 3.05, 2.1));
+            pudelka.Add(new Pudelko(2.1, 1, 3.05));
+            pudelka.Add(new Pudelko(2100, 10000, 3050, UnitOfMeasure.milimeter));
 
-            Console.WriteLine(P4.ToString());
+            foreach (Pudelko pudelko in pudelka)
+            {
+                Console.WriteLine(pudelko);
+            }
+
+            if (pudelka[0].Objetosc < pudelka[1].Objetosc)
+            {
+                pudelka.Sort();
+            }
+
+
+            Console.WriteLine(pudelka[0].Equals(pudelka[2]));
+
+            Console.WriteLine(pudelka[1].ToString("mm"));
+
+
+            Console.WriteLine(pudelka[3].ToString());
+
+            Console.WriteLine(pudelka[1].Equals(pudelka[3]));
 
         }
     }

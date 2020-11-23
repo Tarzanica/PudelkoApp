@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace PudelkoLib
 {
-    public sealed class Pudelko : IFormattable, IEquatable<Pudelko>
+    public sealed class Pudelko : IFormattable, IEquatable<Pudelko>, IComparable<Pudelko>, IEnumerable<Pudelko>
     {
         public enum UnitOfMeasure
         {
@@ -21,14 +24,14 @@ namespace PudelkoLib
 
         private double ConvertToMeter(double num)
         {
-            if (unit == UnitOfMeasure.milimeter) return num/1000;
+            if (unit == UnitOfMeasure.milimeter) return num / 1000;
 
-            if (unit == UnitOfMeasure.centimeter) return num/100;
+            if (unit == UnitOfMeasure.centimeter) return num / 100;
 
             return num;
         }
 
-        public Pudelko(double a = 0.1 , double b = 0.1 , double c = 0.1 , UnitOfMeasure unit = UnitOfMeasure.meter)
+        public Pudelko(double a = 0.1, double b = 0.1, double c = 0.1, UnitOfMeasure unit = UnitOfMeasure.meter)
         {
             this.a = a;
             this.b = b;
@@ -51,21 +54,23 @@ namespace PudelkoLib
             if (unit == UnitOfMeasure.centimeter) return "cm";
             return "mm";
         }
-
         public override string ToString()
         {
 
             return $"{ConvertToMeter(a):0.000}m \u00D7 {ConvertToMeter(b):0.000}m \u00D7 {ConvertToMeter(c):0.000}m";
         }
-
         public string ToString(string format, IFormatProvider formatProvider)
+        {
+            throw new NotImplementedException();
+        }
+        public string ToString(string format)
         {
             switch (format)
             {
                 case "m":
                     return ToString();
                 case "cm":
-                    return $"{(ConvertToMeter(a)*100):0.0}cm \u00D7 {(ConvertToMeter(b) * 100):0.0}cm \u00D7 {(ConvertToMeter(c) * 100):0.0}cm";
+                    return $"{(ConvertToMeter(a) * 100):0.0}cm \u00D7 {(ConvertToMeter(b) * 100):0.0}cm \u00D7 {(ConvertToMeter(c) * 100):0.0}cm";
                 case "mm":
                     return $"{(ConvertToMeter(a) * 1000):0}mm \u00D7 {(ConvertToMeter(b) * 1000):0}mm \u00D7 {(ConvertToMeter(c) * 1000):0}mm";
                 default:
@@ -74,19 +79,17 @@ namespace PudelkoLib
         }
 
         public double Objetosc => Math.Round((ConvertToMeter(a) * ConvertToMeter(b) * ConvertToMeter(c)), 9);
+        public double Pole => Math.Round((2 * (ConvertToMeter(a) * ConvertToMeter(b)) + 2 * (ConvertToMeter(b) * ConvertToMeter(c)) + 2 * (ConvertToMeter(a) * ConvertToMeter(c))), 6);
 
-        public double Pole => Math.Round((2 * (a * b) + 2 * (b * c) + 2 * (a * c)), 6);
-
-
-        public bool Equals(Pudelko obj)
+        public bool Equals(Pudelko other)
         {
             double a1 = ConvertToMeter(a);
             double b1 = ConvertToMeter(b);
             double c1 = ConvertToMeter(c);
 
-            double a2 = ConvertToMeter(obj.A);
-            double b2 = ConvertToMeter(obj.B);
-            double c2 = ConvertToMeter(obj.C);
+            double a2 = ConvertToMeter(other.A);
+            double b2 = ConvertToMeter(other.B);
+            double c2 = ConvertToMeter(other.C);
 
             if (a1 == a2 || a1 == b2 || a1 == c2)
                 if (b1 == b2 || b1 == c2 || b1 == a2)
@@ -106,25 +109,27 @@ namespace PudelkoLib
             return Equals(pudelkoObj);
         }
 
-        // override object.GetHashCode
         public override int GetHashCode()
         {
             return base.GetHashCode() * 17;
         }
 
+        public int CompareTo(Pudelko other)
+        {
+            throw new NotImplementedException();
+        }
 
-        public static bool operator == (Pudelko p1, Pudelko p2)
+        public static bool operator ==(Pudelko p1, Pudelko p2)
         {
             return p1.Equals(p2);
         }
 
-
-        public static bool operator != (Pudelko p1, Pudelko p2)
+        public static bool operator !=(Pudelko p1, Pudelko p2)
         {
             return !p1.Equals(p2);
         }
 
-        public static Pudelko operator + (Pudelko p1, Pudelko p2)
+        public static Pudelko operator +(Pudelko p1, Pudelko p2)
         {
             double a1 = p1.ConvertToMeter(p1.A);
             double b1 = p1.ConvertToMeter(p1.B);
@@ -175,13 +180,49 @@ namespace PudelkoLib
             double size3 = Math.Max(mediumSize1, mediumSize2);
 
             return new Pudelko(size1, size2, size3);
-
         }
 
-
-        public static implicit operator Pudelko((int a, int b, int c) v)
+        public static explicit operator double[](Pudelko p)
         {
-            throw new NotImplementedException();
+            double[] tab = new double[3];
+            tab[0] = p.a;
+            tab[1] = p.b;
+            tab[2] = p.c;
+            return tab;
         }
+        public static implicit operator Pudelko(ValueTuple<int, int, int> v)
+        {
+            Pudelko p = new Pudelko(v.Item1, v.Item1, v.Item3, Pudelko.UnitOfMeasure.milimeter);
+            return p;
+        }
+
+        public double this[int indexer]
+        {
+            get
+            {
+                var tab = (double[])this;
+                return tab[indexer];
+            }
+        }
+
+        private List<Pudelko> pudelka = new List<Pudelko>();
+        public IEnumerator<Pudelko> GetEnumerator()
+        {
+            foreach (Pudelko x in pudelka)
+            {
+                yield return x.A;
+                yield return x.B;
+                yield return x.C;
+            }
+        }
+        private IEnumerator GetEnumerator1()
+        {
+            return this.GetEnumerator();
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator1();
+        }
+
     }
 }
