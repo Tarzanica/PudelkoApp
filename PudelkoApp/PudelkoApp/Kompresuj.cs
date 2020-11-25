@@ -3,14 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PudelkoApp
+namespace PudelkoAppExtenshions
 {
-    public static class Kompresuj
+    public static class MyExtenshionMethods
     {
-        //public static double Pudelko(this double a)
-        //{
-        //    Pudelko pSzescienne = new Pudelko();
-        //    return pSzescienne.Objetosc.Equals(Pudelko p);
-        //}
+        public static Pudelko Kompresuj(this Pudelko p)
+        {
+            double a = Math.Cbrt(p.Objetosc);
+            return new Pudelko(a, a, a);
+        }
     }
 }

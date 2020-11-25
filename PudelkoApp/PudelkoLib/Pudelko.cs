@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq.Expressions;
+
 
 namespace PudelkoLib
 {
-    public sealed class Pudelko : IFormattable, IEquatable<Pudelko>, IComparable<Pudelko>, IEnumerable<Pudelko>
+    public sealed class Pudelko : IFormattable, IEquatable<Pudelko>, IComparable<Pudelko>/*, IEnumerable<double>*/
     {
         public enum UnitOfMeasure
         {
@@ -13,8 +15,7 @@ namespace PudelkoLib
             centimeter,
             milimeter
         }
-
-        private readonly UnitOfMeasure unit;
+        private UnitOfMeasure unit { get; set; }
         private readonly double a;
         public double A => a;
         private readonly double b;
@@ -22,81 +23,59 @@ namespace PudelkoLib
         private readonly double c;
         public double C => c;
 
-        private double ConvertToMeter(double num)
+        public Pudelko(double a = 0.1, double b = 0.1, double c = 0.1, UnitOfMeasure unit = UnitOfMeasure.meter)
+        {
+
+            this.a = ConvertToMeter(a,unit);
+            this.b = ConvertToMeter(b, unit);
+            this.c = ConvertToMeter(c, unit);
+            this.unit = unit;
+
+            if (this.a > 10 || this.b > 10 || this.c > 10)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            else if (this.a < 0.001 || this.b < 0.001 ||this.c < 0.001)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+        private double ConvertToMeter(double num, UnitOfMeasure unit)
         {
             if (unit == UnitOfMeasure.milimeter) return num / 1000;
-
             if (unit == UnitOfMeasure.centimeter) return num / 100;
-
             return num;
         }
 
-        public Pudelko(double a = 0.1, double b = 0.1, double c = 0.1, UnitOfMeasure unit = UnitOfMeasure.meter)
-        {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.unit = unit;
-
-            if (ConvertToMeter(this.a) > 10 || ConvertToMeter(this.b) > 10 || ConvertToMeter(this.c) > 10)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-            else if (ConvertToMeter(this.a) < 0.001 || ConvertToMeter(this.b) < 0.001 || ConvertToMeter(this.c) < 0.001)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private string getUnitAbbreviation()
-        {
-            if (unit == UnitOfMeasure.meter) return "m";
-            if (unit == UnitOfMeasure.centimeter) return "cm";
-            return "mm";
-        }
         public override string ToString()
         {
-
-            return $"{ConvertToMeter(a):0.000}m \u00D7 {ConvertToMeter(b):0.000}m \u00D7 {ConvertToMeter(c):0.000}m";
+            CultureInfo.CreateSpecificCulture("en-US");
+            return $"{a:0.000} m \u00D7 {b:0.000} m \u00D7 {c:0.000} m";
+        }
+        
+        public string ToString(string unit)
+        {
+            return this.ToString(unit, CultureInfo.CreateSpecificCulture("en-US"));
         }
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            throw new NotImplementedException();
-        }
-        public string ToString(string format)
-        {
+            if (String.IsNullOrEmpty(format)) format = "m";
+            if (formatProvider == null) formatProvider = CultureInfo.CurrentCulture;
+
             switch (format)
             {
                 case "m":
                     return ToString();
                 case "cm":
-                    return $"{(ConvertToMeter(a) * 100):0.0}cm \u00D7 {(ConvertToMeter(b) * 100):0.0}cm \u00D7 {(ConvertToMeter(c) * 100):0.0}cm";
+                    return $"{(a * 100):0.0} cm \u00D7 {(b * 100):0.0} cm \u00D7 {(c * 100):0.0} cm";
                 case "mm":
-                    return $"{(ConvertToMeter(a) * 1000):0}mm \u00D7 {(ConvertToMeter(b) * 1000):0}mm \u00D7 {(ConvertToMeter(c) * 1000):0}mm";
+                    return $"{(a * 1000):0} mm \u00D7 {(b * 1000):0} mm \u00D7 {(c * 1000):0} mm";
                 default:
-                    throw new FormatException();
+                    throw new FormatException(string.Format("wrong", format));
             }
         }
-
-        public double Objetosc => Math.Round((ConvertToMeter(a) * ConvertToMeter(b) * ConvertToMeter(c)), 9);
-        public double Pole => Math.Round((2 * (ConvertToMeter(a) * ConvertToMeter(b)) + 2 * (ConvertToMeter(b) * ConvertToMeter(c)) + 2 * (ConvertToMeter(a) * ConvertToMeter(c))), 6);
-
-        public bool Equals(Pudelko other)
-        {
-            double a1 = ConvertToMeter(a);
-            double b1 = ConvertToMeter(b);
-            double c1 = ConvertToMeter(c);
-
-            double a2 = ConvertToMeter(other.A);
-            double b2 = ConvertToMeter(other.B);
-            double c2 = ConvertToMeter(other.C);
-
-            if (a1 == a2 || a1 == b2 || a1 == c2)
-                if (b1 == b2 || b1 == c2 || b1 == a2)
-                    if (c1 == a2 || c1 == b2 || c1 == c2) return true;
-            return false;
-        }
-
+        public double Objetosc => Math.Round(a * b * c, 9);
+        public double Pole => Math.Round(2 * (a * b) + 2 * (b * c) + 2 * (a * c), 6);
         public override bool Equals(Object obj)
         {
             if (obj == null)
@@ -108,10 +87,24 @@ namespace PudelkoLib
             if (pudelkoObj == null) return false;
             return Equals(pudelkoObj);
         }
+        public bool Equals(Pudelko other)
+        {
+            double a1 = a;
+            double b1 = b;
+            double c1 = c;
 
+            double a2 = other.A;
+            double b2 = other.B;
+            double c2 = other.C;
+
+            if (a1 == a2 || a1 == b2 || a1 == c2)
+                if (b1 == b2 || b1 == c2 || b1 == a2)
+                    if (c1 == a2 || c1 == b2 || c1 == c2) return true;
+            return false;
+        }
         public override int GetHashCode()
         {
-            return base.GetHashCode() * 17;
+            return A.GetHashCode() + B.GetHashCode() + C.GetHashCode() + unit.GetHashCode();
         }
 
         public int CompareTo(Pudelko other)
@@ -131,13 +124,13 @@ namespace PudelkoLib
 
         public static Pudelko operator +(Pudelko p1, Pudelko p2)
         {
-            double a1 = p1.ConvertToMeter(p1.A);
-            double b1 = p1.ConvertToMeter(p1.B);
-            double c1 = p1.ConvertToMeter(p1.C);
+            double a1 = p1.A;
+            double b1 = p1.B;
+            double c1 = p1.C;
 
-            double a2 = p2.ConvertToMeter(p2.A);
-            double b2 = p2.ConvertToMeter(p2.B);
-            double c2 = p2.ConvertToMeter(p2.C);
+            double a2 = p2.A;
+            double b2 = p2.B;
+            double c2 = p2.C;
 
             double min1 = Math.Min(Math.Min(a1, b1), c1);
             double min2 = Math.Min(Math.Min(a2, b2), c2);
@@ -178,7 +171,6 @@ namespace PudelkoLib
             }
 
             double size3 = Math.Max(mediumSize1, mediumSize2);
-
             return new Pudelko(size1, size2, size3);
         }
 
@@ -192,7 +184,7 @@ namespace PudelkoLib
         }
         public static implicit operator Pudelko(ValueTuple<int, int, int> v)
         {
-            Pudelko p = new Pudelko(v.Item1, v.Item1, v.Item3, Pudelko.UnitOfMeasure.milimeter);
+            Pudelko p = new Pudelko(v.Item1, v.Item2, v.Item3, Pudelko.UnitOfMeasure.milimeter);
             return p;
         }
 
@@ -205,24 +197,28 @@ namespace PudelkoLib
             }
         }
 
-        private List<Pudelko> pudelka = new List<Pudelko>();
-        public IEnumerator<Pudelko> GetEnumerator()
-        {
-            foreach (Pudelko x in pudelka)
-            {
-                yield return x.A;
-                yield return x.B;
-                yield return x.C;
-            }
-        }
-        private IEnumerator GetEnumerator1()
-        {
-            return this.GetEnumerator();
-        }
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator1();
-        }
+        //private List<Pudelko> pudelka = new List<Pudelko>();
+        //public IEnumerator<Pudelko> GetEnumerator()
+        //{
+        //    foreach (Pudelko x in pudelka)
+        //    {
+        //        yield return x.A;
+        //        yield return x.B;
+        //        yield return x.C;
+        //    }
+        //}
+        //private IEnumerator GetEnumerator1()
+        //{
+        //    return this.GetEnumerator();
+        //}
+        //IEnumerator IEnumerable.GetEnumerator()
+        //{
+        //    return GetEnumerator1();
+        //}
 
+        //public static Pudelko Parse()
+        //{
+
+        //}
     }
 }
