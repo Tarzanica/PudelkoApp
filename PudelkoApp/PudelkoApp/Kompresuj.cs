@@ -12,5 +12,6 @@ namespace PudelkoAppExtenshions
             double a = Math.Cbrt(p.Objetosc);
             return new Pudelko(a, a, a);
         }
+
     }
 }

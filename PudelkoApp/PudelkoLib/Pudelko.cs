@@ -2,19 +2,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
-
 
 namespace PudelkoLib
 {
-    public sealed class Pudelko : IFormattable, IEquatable<Pudelko>, IComparable<Pudelko>/*, IEnumerable<double>*/
+    public enum UnitOfMeasure
     {
-        public enum UnitOfMeasure
-        {
-            meter,
-            centimeter,
-            milimeter
-        }
+        meter,
+        centimeter,
+        milimeter
+    }
+    public sealed class Pudelko : IFormattable, IEquatable<Pudelko>, IComparable<Pudelko> , IEnumerable<double>
+    {
+        
         private UnitOfMeasure unit { get; set; }
         private readonly double a;
         public double A => a;
@@ -23,12 +24,12 @@ namespace PudelkoLib
         private readonly double c;
         public double C => c;
 
-        public Pudelko(double a = 0.1, double b = 0.1, double c = 0.1, UnitOfMeasure unit = UnitOfMeasure.meter)
+        public Pudelko(double? a = null, double? b = null, double? c = null, UnitOfMeasure unit = UnitOfMeasure.meter)
         {
 
-            this.a = ConvertToMeter(a,unit);
-            this.b = ConvertToMeter(b, unit);
-            this.c = ConvertToMeter(c, unit);
+            this.a = a==null? 0.1 : ConvertToMeter((double)a,unit);
+            this.b = b == null? 0.1 : ConvertToMeter((double)b, unit);
+            this.c = c == null? 0.1 : ConvertToMeter((double)c, unit);
             this.unit = unit;
 
             if (this.a > 10 || this.b > 10 || this.c > 10)
@@ -89,18 +90,26 @@ namespace PudelkoLib
         }
         public bool Equals(Pudelko other)
         {
-            double a1 = a;
-            double b1 = b;
-            double c1 = c;
+            try
+            {
+                double a1 = a;
+                double b1 = b;
+                double c1 = c;
 
-            double a2 = other.A;
-            double b2 = other.B;
-            double c2 = other.C;
+                double a2 = other.A;
+                double b2 = other.B;
+                double c2 = other.C;
 
-            if (a1 == a2 || a1 == b2 || a1 == c2)
-                if (b1 == b2 || b1 == c2 || b1 == a2)
-                    if (c1 == a2 || c1 == b2 || c1 == c2) return true;
-            return false;
+                if (a1 == a2 || a1 == b2 || a1 == c2)
+                    if (b1 == b2 || b1 == c2 || b1 == a2)
+                        if (c1 == a2 || c1 == b2 || c1 == c2) return true;
+                return false;
+            }
+            catch (NullReferenceException e)
+            {
+                return false;
+            }
+            
         }
         public override int GetHashCode()
         {
@@ -109,7 +118,25 @@ namespace PudelkoLib
 
         public int CompareTo(Pudelko other)
         {
-            throw new NotImplementedException();
+            return compareByVolume(other);
+        }
+
+        public int compareByVolume(Pudelko other)
+        {
+            if (this.Objetosc == other.Objetosc) return compareByArea(other);
+            return this.Objetosc > other.Objetosc ? 1 : -1;
+        }
+
+        private int compareByArea(Pudelko other)
+        {
+            if (this.Pole == other.Pole) return compareBySides(other);
+            return this.Pole > other.Pole? 1 : -1;
+        }
+
+        private int compareBySides(Pudelko other)
+        {
+            if (this.A + this.B + this.C > other.A + other.B + other.C) return 0;
+            return this.A + this.B + this.C > other.A + other.B + other.C ? 1 : -1;
         }
 
         public static bool operator ==(Pudelko p1, Pudelko p2)
@@ -184,7 +211,7 @@ namespace PudelkoLib
         }
         public static implicit operator Pudelko(ValueTuple<int, int, int> v)
         {
-            Pudelko p = new Pudelko(v.Item1, v.Item2, v.Item3, Pudelko.UnitOfMeasure.milimeter);
+            Pudelko p = new Pudelko(v.Item1, v.Item2, v.Item3, UnitOfMeasure.milimeter);
             return p;
         }
 
@@ -197,28 +224,32 @@ namespace PudelkoLib
             }
         }
 
-        //private List<Pudelko> pudelka = new List<Pudelko>();
-        //public IEnumerator<Pudelko> GetEnumerator()
-        //{
-        //    foreach (Pudelko x in pudelka)
-        //    {
-        //        yield return x.A;
-        //        yield return x.B;
-        //        yield return x.C;
-        //    }
-        //}
-        //private IEnumerator GetEnumerator1()
-        //{
-        //    return this.GetEnumerator();
-        //}
-        //IEnumerator IEnumerable.GetEnumerator()
-        //{
-        //    return GetEnumerator1();
-        //}
+        public static Pudelko Parse(string pudelko)
+        {
+            string[] sides = pudelko.Replace(" ", "").Split('x');
+            if (sides.Length == 0) return new Pudelko();
+            double[] finalSides = new double[3];
+            string measure = new String(sides[0].Where(Char.IsLetter).ToArray());
+            UnitOfMeasure unit;
+            if (measure == "mm") unit = UnitOfMeasure.milimeter;
+            else unit = measure == "cm" ? UnitOfMeasure.centimeter : UnitOfMeasure.meter;
+            for (int i = 0; i < sides.Length; i++)
+                finalSides[i] = Double.Parse(sides[i].Replace(measure,""),CultureInfo.InvariantCulture);
+            return new Pudelko(finalSides[0],finalSides[1],finalSides[2],unit);
+        }
 
-        //public static Pudelko Parse()
-        //{
+        public IEnumerator<double> GetEnumerator()
+        {
 
-        //}
+            yield return A;
+            yield return B;
+            yield return C;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

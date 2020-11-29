@@ -478,10 +478,65 @@ namespace PudelkoUnitTests
 
         #region Equals ===========================================
         // ToDo
+        [DataTestMethod]
+        [DataRow(2.1, 3.554, 7.304, 3.554, 7.304, 2.1, true)]
+        [DataRow(0.1, 0.003, 8.9, 0.003, 8.9, 0.1, true)]
+        [DataRow(9.999, 7.02, 3.002, 3.002, 9.997, 7.002, false)]
+        [DataRow(2.019, 0.33, 5.32, 0.599, 5.789, 3.0, false)]
+        public void Equals(double a, double b, double c, double expectedA, double expectedB, double expectedC, bool expectedResult)
+        {
+            Pudelko p1 = new Pudelko(a, b, c);
+            Pudelko p2 = new Pudelko(expectedA, expectedB, expectedC);
+
+            Assert.AreEqual(expectedResult, p1.Equals(p2));
+        }
+
         #endregion
 
         #region Operators overloading ===========================
         // ToDo
+        [DataTestMethod]
+        [DataRow(2.1, 3.554, 7.304, 3.554, 7.304, 2.1, true)]
+        [DataRow(0.1, 0.003, 8.9, 0.003, 8.9, 0.1, true)]
+        [DataRow(9.999, 7.02, 3.002, 3.002, 9.997, 7.002, false)]
+        [DataRow(2.019, 0.33, 5.32, 0.599, 5.789, 3.0, false)]
+
+        public void EqualsOperator(double a, double b, double c, double expectedA, double expectedB, double expectedC, bool expectedResult)
+        {
+            Pudelko p1 = new Pudelko(a, b, c);
+            Pudelko p2 = new Pudelko(expectedA, expectedB, expectedC);
+
+            Assert.AreEqual(expectedResult, p1 == p2);
+        }
+
+        [DataTestMethod]
+        [DataRow(2.1, 3.554, 7.304, 3.554, 7.304, 2.1, false)]
+        [DataRow(0.1, 0.003, 8.9, 0.003, 8.9, 0.1, false)]
+        [DataRow(9.999, 7.02, 3.002, 3.002, 9.997, 7.002, true)]
+        [DataRow(2.019, 0.33, 5.32, 0.599, 5.789, 3.0, true)]
+        public void NotEqualOOperator(double a, double b, double c, double expectedA, double expectedB, double expectedC, bool expectedResult)
+        {
+            Pudelko p1 = new Pudelko(a, b, c);
+            Pudelko p2 = new Pudelko(expectedA, expectedB, expectedC);
+
+            Assert.AreEqual(expectedResult, p1 != p2);
+        }
+
+        [DataTestMethod]
+        [DataRow(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.5, 0.6, 0.5)]
+        [DataRow(1.5, 2.2, 3.0, 5.0, 0.5, 0.1, 1.6, 5, 2.2)]
+        [DataRow(4.222, 7.092, 0.3, 1.92, 3.870, 0.67, 0.97, 7.092, 4.222)]
+        public void PlusOperator(double a1, double b1, double c1, double a2, double b2, double c2, double expectedA, double expectedB, double expectedC)
+        {
+            Pudelko p1 = new Pudelko(a1, b1, c1);
+            Pudelko p2 = new Pudelko(a2, b2, c2);
+
+            Pudelko p3 = p1 + p2;
+
+            Assert.AreEqual(expectedA, p3.A);
+            Assert.AreEqual(expectedB, p3.B);
+            Assert.AreEqual(expectedC, p3.C);
+        }
         #endregion
 
         #region Conversions =====================================
@@ -524,16 +579,18 @@ namespace PudelkoUnitTests
             var p = new Pudelko(1, 2.1, 3.231);
             var tab = new[] { p.A, p.B, p.C };
             int i = 0;
-            //foreach (double x in p)
-            //{
-            //    Assert.AreEqual(x, tab[i]);
-            //    i++;
-            //}
+            foreach (double x in p)
+            {
+               Assert.AreEqual(x, tab[i]);
+               i++;
+            }
         }
 
         #endregion
 
         #region Parsing =========================================
+
+
 
         #endregion
 
